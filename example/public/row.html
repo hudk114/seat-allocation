@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>precise-operation</title>
+</head>
+<body>
+  <header>precise-operation</header>
+
+  <ol>
+    <li>
+      <b>import</b>
+      <pre>
+        <code>
+          // js引入
+          var operation = window['row'];
+        </code>
+      </pre>
+    </li>
+    <li>
+      <b>simple usage</b>
+      <pre>
+        <code>
+
+        </code>
+        <button class="button">open your console and click</button>
+      </pre>
+    </li>
+  </ol>
+
+  <script src="/js/row.js"></script>
+  <script src="/js/code2scirpt.js"></script>
+  <script>
+    var Row = window['row'];
+
+    document.body.addEventListener('click', function (event) {
+      var ele = event.target;
+      if (!(ele.attributes.class && ele.attributes.class.textContent.indexOf('button') > -1)) {
+        return;
+      }
+
+      code2script(ele.parentElement.getElementsByTagName('code')[0].textContent);
+    });
+  </script>
+</body>
+</html>
