@@ -1,17 +1,19 @@
 /**
  * 库代码入口
  */
-import Line from './model/line';
-import Section from './model/section';
 import Gym from './model/gym';
 
-import HalfRandomAllocation from './controller/half-random-allocation';
+// import HalfRandomAllocation from './controller/half-random-allocation';
+// import AllRandomAllocation from './controller/all-random-allocation';
+import OrderAllocation from './controller/order-allocation';
 
 // export default Line;
 // export default Section;
 export default Gym;
-export const allocation = new HalfRandomAllocation();
+export const allocation = new OrderAllocation();
 export const gym = new Gym(4);
 
-// let gym = new Gym(4);
-// halfRandom(gym, 5);
+/**
+ * TODO 最外层加锁及等待队列
+ * TODO UI
+ */

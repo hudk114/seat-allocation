@@ -17,7 +17,6 @@
   },
   "keywords": [],
   "precommit": [
-    "format",
     "linter",
     "stylelinter"
   ],

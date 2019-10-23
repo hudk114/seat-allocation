@@ -2,14 +2,28 @@
  * get random number from [0, number)
  * @param {Number} number
  */
-export function random (number) {
+function getRandomNumber (number) {
   return Math.floor(number * Math.random());
 }
 
-export function error (msg) {
-  return function () {
-    throw new Error(msg);
-  };
+/**
+ * 获取count个[0, number)间的random数并返回
+ * @param {Number} number
+ * @param {Number} count
+ */
+export function random (number, count = 1) {
+  if (number < count) return []; // TODO
+
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    let n = -1;
+    do {
+      n = getRandomNumber(number);
+    } while (arr.includes(n));
+    arr.push(n);
+  }
+
+  return arr;
 }
 
 /**

@@ -1,34 +1,42 @@
 /**
  * 整体体育馆的数据结构
- * 
+ * 设计时考虑
+ * 能快速的获取：1. 当前gym剩余座位数 emptySeatCount；
+ *              2. 当前gym最大剩余连排座位数 maxConSeatCount；
+ * 提供方法： 1. 获取拥有count个连排座位的sectionIndexArray；
+ *           2. 获取第index个section
+ * 后续改进： 1. 支持不同形状大小的扇区，添加addSection与removeSection方法；
+ *           2. getPropertySectionIndex方法可以采用函数式；
  */
 
 import Section from './section';
 
 export default class Gym {
+  // sections = []; // eslint-disable-line
+  // lock = false;
+  // sectionCount = 0;
 
-  sections = []; // 扇区
-  lock = false;
-  sectionCount = 0;
-
-  constructor (sectionCount = 4) {
-    this._init(sectionCount);
+  constructor (sectionCount = 4, lineCount = 26, start = 50, gap = 2) {
+    this._init(sectionCount, lineCount, start, gap);
   }
 
   // 剩余的空位数量
-  get seatCount () {
-    return this.sections.reduce((prev, curr) => prev + curr.seatCount, 0);
+  get emptySeatCount () {
+    return this.sections.reduce((prev, curr) => prev + curr.emptySeatCount, 0);
   }
 
-  get maxCount() {
-    return Math.max(...this.sections.map(section => section.maxCount));
+  get maxConSeatCount () {
+    return Math.max(...this.sections.map(section => section.maxConSeatCount));
   }
 
-  _init (sectionCount) {
+  _init (sectionCount = 4, lineCount = 26, start = 50, gap = 2) {
     this.sectionCount = sectionCount;
+    this.lineCount = lineCount;
+    this.start = start;
+    this.gap = gap;
     this.sections = [];
     for (let i = 0; i < sectionCount; i++) {
-      this.sections[i] = new Section();
+      this.sections[i] = new Section(lineCount, start, gap);
     }
   }
 
@@ -42,23 +50,15 @@ export default class Gym {
    */
   // FIXME 函数式抽象
   getPropertySectionIndex (count) {
-    if (this.maxCount < count) return [];
+    if (this.maxConSeatCount < count) return [];
 
     return this.sections.reduce((prev, section, sectionIndex) => {
-      if (section.maxCount >= count) return prev.concat(sectionIndex);
+      if (section.maxConSeatCount >= count) return prev.concat(sectionIndex);
       return prev;
     }, []);
   }
 
-  // lockSeat (index, seatIndex, count) {
-
-  // }
-
-  // releaseSeat (index, seatIndex, count) {
-
-  // }
-
-  // releaseAll () {
-
-  // }
+  releaseAll () {
+    this._init(this.sectionCount, this.lineCount, this.start, this.gap);
+  }
 }

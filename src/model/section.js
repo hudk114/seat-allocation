@@ -1,33 +1,33 @@
 /**
  * 每一个扇区的数据结构
  * 设计时考虑
- * 能快速的获取：1. 当前section最大剩余连排座位数量；
- *            2. 每line的
- * 提供方法： 1. 锁定与释放第index行line的第seatIndex位置的count个位置；
- *          2. 锁定随机行的count座位数量；
+ * 能快速的获取：1. 当前section剩余座位数 emptySeatCount；
+ *              2. 当前section最大剩余连排座位数 maxConSeatCount；
+ * 提供方法： 1. 获取拥有count个连排座位的lineIndexArray；
+ *           2. 获取第index个line
+ * 后续改进：
  */
 
 import Line from './line';
 
 export default class Section {
-
-  lines = []; // 排数据结构
-  lock = false;
-  lineCount = 0;
-  start = 50;
-  gap = 2;
+  // lines = []; // 排数据结构
+  // lock = false;
+  // lineCount = 0;
+  // start = 50;
+  // gap = 2;
 
   constructor (lineCount = 26, start = 50, gap = 2) {
     this._init(lineCount, start, gap);
   }
 
   // 剩余的空位数量
-  get seatCount () {
-    return this.lines.reduce((prev, curr) => prev + curr.seatCount, 0);
+  get emptySeatCount () {
+    return this.lines.reduce((prev, curr) => prev + curr.emptySeatCount, 0);
   }
 
-  get maxCount() {
-    return Math.max(...this.lines.map(line => line.maxCount));
+  get maxConSeatCount () {
+    return Math.max(...this.lines.map(line => line.maxConSeatCount));
   }
 
   _init (lineCount = 26, start = 50, gap = 2) {
@@ -49,23 +49,15 @@ export default class Section {
    * @param {Number} count
    */
   getPropertyLineIndex (count) {
-    if (this.maxCount < count) return [];
+    if (this.maxConSeatCount < count) return [];
 
     return this.lines.reduce((prev, line, lineIndex) => {
-      if (line.maxCount >= count) return prev.concat(lineIndex);
+      if (line.maxConSeatCount >= count) return prev.concat(lineIndex);
       return prev;
     }, []);
   }
 
-  lockSeat (index, seatIndex, count) {
-
-  }
-
-  releaseSeat (index, seatIndex, count) {
-
-  }
-
   releaseAll () {
-
+    this._init(this.lineCount, this.start, this.gap);
   }
 }

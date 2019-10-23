@@ -1,18 +1,19 @@
 /**
  * 每一排座位的数据结构
  * 设计时考虑
- * 能快速的获取： 1. 该line剩余座位数；
- *             2.该line最大剩余连排座位；
- *             2. 该line符合要求的剩余连排位置；
- * 提供方法： 1. 锁定与释放从index位置开始的count个位置；
- *          2. 锁定随机位置的count座位数量；
+ * 能快速的获取：1. 该line剩余座位数 emptySeatCount；
+ *              2. 该line最大剩余连排座位数 maxConSeatCount；
+ * 提供方法： 1. 获取拥有count个连排座位的seatIndexArray；
+ *           3. 锁定与释放从index位置开始的count个位置；
+ * 后续改进： 1. 边界条件界定时根据产品需求给出更友善的错误提示；
  */
 
-export default class Line {
+import { innerError } from '../util/error';
 
-  seats = []; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
-  lock = false;
-  seatTotalCount = 0;
+export default class Line {
+  // seats = []; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
+  // lock = false;
+  // seatTotalCount = 0;
 
   constructor (seatTotalCount) {
     this._init(seatTotalCount);
@@ -51,21 +52,23 @@ export default class Line {
   }
 
   // 剩余的空位数量
-  get seatCount () {
+  get emptySeatCount () {
     return this.seats.reduce((prev, curr) => prev + curr.seatCount, 0);
   }
 
   // 获取最大的连续空位长度
-  get maxCount () {
+  get maxConSeatCount () {
     return Math.max(...this.seats.map(({ seatCount }) => seatCount));
   }
 
   _init (seatTotalCount) {
     this.seatTotalCount = seatTotalCount;
-    this.seats = [{
-      seatCount: seatTotalCount,
-      index: 0
-    }];
+    this.seats = [
+      {
+        seatCount: seatTotalCount,
+        index: 0
+      }
+    ];
   }
 
   _addLock (callback) {
@@ -80,26 +83,18 @@ export default class Line {
    * @param {Number} count
    */
   getPropertySeatIndex (count) {
-    if (this.maxCount < count) return [];
+    if (this.maxConSeatCount < count) return [];
 
-    return this.seats.filter(seat => seat.seatCount >= count)
+    return this.seats
+      .filter(seat => seat.seatCount >= count)
       .reduce((prev, curr) => {
         const arr = [];
-        for (let i = curr.index; i <= curr.seatCount - count + curr.index; i++) arr.push(i);
+        for (let i = curr.index; i <= curr.seatCount - count + curr.index; i++) {
+          arr.push(i);
+        }
         return prev.concat(arr);
       }, []);
   }
-
-  /**
-   * 锁定随机的长度为count的座位并返回
-   * @param {Number} count
-   */
-  // lockRandomSeat (count) {
-  //   if (this.maxCount < count) return false; // TODO
-  //   let arr = this.getPropertySeatIndex(count);
-
-  //   return this.lockSeat(arr[random(arr.length)], count);
-  // }
 
   /**
    * 锁定从index开始的count个位置
@@ -108,20 +103,22 @@ export default class Line {
    * @returns {Array} seats<index: Number>
    */
   // FIXME 边界条件处理
-  lockSeat (index, count) {
+  lockSeats (index, count) {
     if (this.lock) return false; // TODO
     this._addLock(_ => {
-      if (this.seatCount < index + count) return false; // TODO 超出范围
-      if (!this.getPropertySeatIndex(count).includes(index)) return false; // TODO index位置放不下
+      if (this.seatCount < index + count) innerError();
+      if (!this.getPropertySeatIndex(count).includes(index)) innerError();
 
       let correctPosIndex = Line.getPosition(index, this.seats);
 
       // this.seats[correctPosIndex]需要拆分
       let seat = this.seats[correctPosIndex];
-      let newSeats = [{
+      let newSeats = [
+        {
           index: seat.index,
           seatCount: index - seat.index
-        }, {
+        },
+        {
           index: index + count,
           seatCount: seat.index + seat.seatCount - (index + count)
         }
@@ -142,13 +139,13 @@ export default class Line {
    * @param {*} count
    */
   // FIXME 包裹情况下的处理
-  releaseSeat (index, count) {
+  releaseSeats (index, count) {
     if (this.lock) return; // TODO
     this._addLock(_ => {
-      if (this.seatCount < index) return false; // TODO 超出范围
-  
+      if (index < 0 || index > this.seatTotalCount - 1) innerError();
+
       let correctPosIndex = Line.getPosition(index, this.seats);
-  
+
       // 插入后前后两项可能需要合并
       let start = correctPosIndex;
       let deleteCount = 0;
@@ -164,7 +161,8 @@ export default class Line {
         deleteCount++;
         newSeat = {
           index: last.index,
-          seatCount: Math.max(last.index + last.seatCount, index + count) - last.index, // 有可能整个包裹在last中
+          seatCount:
+            Math.max(last.index + last.seatCount, index + count) - last.index // 有可能整个包裹在last中
         };
       }
 
@@ -175,7 +173,7 @@ export default class Line {
         let i = Math.min(newSeat.index, next.index); // 可能整个包裹在next中
         newSeat = {
           index: i,
-          seatCount: next.index + next.seatCount - i,
+          seatCount: next.index + next.seatCount - i
         };
       }
 
