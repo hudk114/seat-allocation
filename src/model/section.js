@@ -8,11 +8,10 @@
  */
 
 import Line from './line';
-import { random } from '../util/index';
 
 export default class Section {
 
-  lines = []; // 行数据结构
+  lines = []; // 排数据结构
   lock = false;
   lineCount = 0;
   start = 50;
@@ -20,6 +19,11 @@ export default class Section {
 
   constructor (lineCount = 26, start = 50, gap = 2) {
     this._init(lineCount, start, gap);
+  }
+
+  // 剩余的空位数量
+  get seatCount () {
+    return this.lines.reduce((prev, curr) => prev + curr.seatCount, 0);
   }
 
   get maxCount() {
@@ -36,32 +40,21 @@ export default class Section {
     }
   }
 
+  getLine (lineIndex) {
+    return this.lines[lineIndex];
+  }
+
   /**
    * 获取能放下count数量的line的index数组
    * @param {Number} count
    */
-  _getPropertyLineIndex (count) {
+  getPropertyLineIndex (count) {
     if (this.maxCount < count) return [];
 
     return this.lines.reduce((prev, line, lineIndex) => {
       if (line.maxCount >= count) return prev.concat(lineIndex);
       return prev;
     }, []);
-  }
-
-  /**
-   * 锁定随机的长度为count的座位并返回
-   * @param {Number} count
-   */
-  lockRandomSeat (count) {
-    if (this.maxCount < count) return false; // TODO
-    let arr = this._getPropertyLineIndex(count);
-    let lineIndex = random(arr.length);
-
-    return {
-      lineIndex: lineIndex + 1,
-      seats: this.lines[lineIndex].lockRandomSeat(count)
-    };
   }
 
   lockSeat (index, seatIndex, count) {

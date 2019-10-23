@@ -1,22 +1,21 @@
 /**
  * 每一排座位的数据结构
  * 设计时考虑
- * 能快速的获取： 1. 该line最大剩余连排座位；
+ * 能快速的获取： 1. 该line剩余座位数；
+ *             2.该line最大剩余连排座位；
  *             2. 该line符合要求的剩余连排位置；
  * 提供方法： 1. 锁定与释放从index位置开始的count个位置；
  *          2. 锁定随机位置的count座位数量；
  */
 
-import { random } from '../util/index';
-
 export default class Line {
 
   seats = []; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
   lock = false;
-  seatCount = 0;
+  seatTotalCount = 0;
 
-  constructor (seatCount) {
-    this._init(seatCount);
+  constructor (seatTotalCount) {
+    this._init(seatTotalCount);
   }
 
   /**
@@ -45,21 +44,26 @@ export default class Line {
   static seatToArr ({ index, seatCount } = {}) {
     const arr = [];
     for (let i = 0; i < seatCount; i++) {
-      arr.push(index + i + 1);
+      arr.push(index + i);
     }
 
     return arr;
   }
 
-  // 获取最长的空位长度
+  // 剩余的空位数量
+  get seatCount () {
+    return this.seats.reduce((prev, curr) => prev + curr.seatCount, 0);
+  }
+
+  // 获取最大的连续空位长度
   get maxCount () {
     return Math.max(...this.seats.map(({ seatCount }) => seatCount));
   }
 
-  _init (seatCount) {
-    this.seatCount = seatCount;
+  _init (seatTotalCount) {
+    this.seatTotalCount = seatTotalCount;
     this.seats = [{
-      seatCount,
+      seatCount: seatTotalCount,
       index: 0
     }];
   }
@@ -75,7 +79,7 @@ export default class Line {
    * 对于[{ index: 0, seatCount: 3 }]和count: 2, 应当返回[0, 1]， 因为位置0和1均可坐下两人
    * @param {Number} count
    */
-  _getPropertySeatIndex (count) {
+  getPropertySeatIndex (count) {
     if (this.maxCount < count) return [];
 
     return this.seats.filter(seat => seat.seatCount >= count)
@@ -90,12 +94,12 @@ export default class Line {
    * 锁定随机的长度为count的座位并返回
    * @param {Number} count
    */
-  lockRandomSeat (count) {
-    if (this.maxCount < count) return false; // TODO
-    let arr = this._getPropertySeatIndex(count);
+  // lockRandomSeat (count) {
+  //   if (this.maxCount < count) return false; // TODO
+  //   let arr = this.getPropertySeatIndex(count);
 
-    return this.lockSeat(arr[random(arr.length)], count);
-  }
+  //   return this.lockSeat(arr[random(arr.length)], count);
+  // }
 
   /**
    * 锁定从index开始的count个位置
@@ -108,7 +112,7 @@ export default class Line {
     if (this.lock) return false; // TODO
     this._addLock(_ => {
       if (this.seatCount < index + count) return false; // TODO 超出范围
-      if (!this._getPropertySeatIndex(count).includes(index)) return false; // TODO index位置放不下
+      if (!this.getPropertySeatIndex(count).includes(index)) return false; // TODO index位置放不下
 
       let correctPosIndex = Line.getPosition(index, this.seats);
 

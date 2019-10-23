@@ -4,7 +4,6 @@
  */
 
 import Section from './section';
-import { random } from '../util/index';
 
 export default class Gym {
 
@@ -14,6 +13,11 @@ export default class Gym {
 
   constructor (sectionCount = 4) {
     this._init(sectionCount);
+  }
+
+  // 剩余的空位数量
+  get seatCount () {
+    return this.sections.reduce((prev, curr) => prev + curr.seatCount, 0);
   }
 
   get maxCount() {
@@ -28,45 +32,22 @@ export default class Gym {
     }
   }
 
+  getSection (sectionIndex) {
+    return this.sections[sectionIndex];
+  }
+
   /**
    * 获取能放下count数量的section的index数组
    * @param {Number} count
    */
   // FIXME 函数式抽象
-  _getPropertySectionIndex (count) {
+  getPropertySectionIndex (count) {
     if (this.maxCount < count) return [];
 
     return this.sections.reduce((prev, section, sectionIndex) => {
       if (section.maxCount >= count) return prev.concat(sectionIndex);
       return prev;
     }, []);
-  }
-
-  /**
-   * 锁定随机的长度为count的座位并返回
-   * @param {Number} count
-   */
-  lockRandomSeat (count) {
-    if (this.maxCount < count) return false; // TODO
-    let arr = this._getPropertySectionIndex(count);
-    let sectionIndex = random(arr.length);
-
-    return {
-      sectionIndex: sectionIndex + 1,
-      ...this.sections[sectionIndex].lockRandomSeat(count)
-    };
-  }
-
-  gagaga (count) {
-    let {
-      sectionIndex,
-      lineIndex,
-      seats,
-    } = this.lockRandomSeat(count);
-
-    seats.forEach(seat => {
-      console.log(`票位置在： 第${sectionIndex}扇区 第${lineIndex}排 第${seat}号 `)
-    });
   }
 
   // lockSeat (index, seatIndex, count) {

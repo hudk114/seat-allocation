@@ -1,16 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.row = factory());
-}(this, (function () { 'use strict';
-
-  /**
-   * get random number from [0, number)
-   * @param {Number} number
-   */
-  function random(number) {
-    return Math.floor(number * Math.random());
-  }
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.row = {})));
+}(this, (function (exports) { 'use strict';
 
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -18,16 +10,26 @@
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+  /**
+   * 每一排座位的数据结构
+   * 设计时考虑
+   * 能快速的获取： 1. 该line剩余座位数；
+   *             2.该line最大剩余连排座位；
+   *             2. 该line符合要求的剩余连排位置；
+   * 提供方法： 1. 锁定与释放从index位置开始的count个位置；
+   *          2. 锁定随机位置的count座位数量；
+   */
+
   var Line = function () {
     // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
-    function Line(seatCount) {
+    function Line(seatTotalCount) {
       _classCallCheck(this, Line);
 
       this.seats = [];
       this.lock = false;
-      this.seatCount = 0;
+      this.seatTotalCount = 0;
 
-      this._init(seatCount);
+      this._init(seatTotalCount);
     }
 
     /**
@@ -39,16 +41,16 @@
 
 
     _createClass(Line, [{
-      key: '_init',
-      value: function _init(seatCount) {
-        this.seatCount = seatCount;
+      key: "_init",
+      value: function _init(seatTotalCount) {
+        this.seatTotalCount = seatTotalCount;
         this.seats = [{
-          seatCount: seatCount,
+          seatCount: seatTotalCount,
           index: 0
         }];
       }
     }, {
-      key: '_addLock',
+      key: "_addLock",
       value: function _addLock(callback) {
         this.lock = true;
         callback();
@@ -62,8 +64,8 @@
        */
 
     }, {
-      key: '_getPropertySeatIndex',
-      value: function _getPropertySeatIndex(count) {
+      key: "getPropertySeatIndex",
+      value: function getPropertySeatIndex(count) {
         if (this.maxCount < count) return [];
 
         return this.seats.filter(function (seat) {
@@ -80,15 +82,12 @@
        * 锁定随机的长度为count的座位并返回
        * @param {Number} count
        */
+      // lockRandomSeat (count) {
+      //   if (this.maxCount < count) return false; // TODO
+      //   let arr = this.getPropertySeatIndex(count);
 
-    }, {
-      key: 'lockRandomSeat',
-      value: function lockRandomSeat(count) {
-        if (this.maxCount < count) return false; // TODO
-        var arr = this._getPropertySeatIndex(count);
-
-        return this.lockSeat(arr[random(arr.length)], count);
-      }
+      //   return this.lockSeat(arr[random(arr.length)], count);
+      // }
 
       /**
        * 锁定从index开始的count个位置
@@ -99,7 +98,7 @@
       // FIXME 边界条件处理
 
     }, {
-      key: 'lockSeat',
+      key: "lockSeat",
       value: function lockSeat(index, count) {
         var _this = this;
 
@@ -108,7 +107,7 @@
           var _seats;
 
           if (_this.seatCount < index + count) return false; // TODO 超出范围
-          if (!_this._getPropertySeatIndex(count).includes(index)) return false; // TODO index位置放不下
+          if (!_this.getPropertySeatIndex(count).includes(index)) return false; // TODO index位置放不下
 
           var correctPosIndex = Line.getPosition(index, _this.seats);
 
@@ -142,7 +141,7 @@
       // FIXME 包裹情况下的处理
 
     }, {
-      key: 'releaseSeat',
+      key: "releaseSeat",
       value: function releaseSeat(index, count) {
         var _this2 = this;
 
@@ -186,7 +185,7 @@
         });
       }
     }, {
-      key: 'releaseAll',
+      key: "releaseAll",
       value: function releaseAll() {
         var _this3 = this;
 
@@ -196,10 +195,20 @@
         });
       }
     }, {
-      key: 'maxCount',
+      key: "seatCount",
 
 
-      // 获取最长的空位长度
+      // 剩余的空位数量
+      get: function get() {
+        return this.seats.reduce(function (prev, curr) {
+          return prev + curr.seatCount;
+        }, 0);
+      }
+
+      // 获取最大的连续空位长度
+
+    }, {
+      key: "maxCount",
       get: function get() {
         return Math.max.apply(Math, _toConsumableArray(this.seats.map(function (_ref2) {
           var seatCount = _ref2.seatCount;
@@ -207,7 +216,7 @@
         })));
       }
     }], [{
-      key: 'getPosition',
+      key: "getPosition",
       value: function getPosition(index, seats) {
         // TODO 二分法
         var i = 0;
@@ -227,7 +236,7 @@
        */
 
     }, {
-      key: 'seatToArr',
+      key: "seatToArr",
       value: function seatToArr() {
         var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
             index = _ref3.index,
@@ -235,7 +244,7 @@
 
         var arr = [];
         for (var i = 0; i < seatCount; i++) {
-          arr.push(index + i + 1);
+          arr.push(index + i);
         }
 
         return arr;
@@ -252,7 +261,7 @@
   function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
   var Section = function () {
-    // 行数据结构
+    // 排数据结构
     function Section() {
       var lineCount = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 26;
       var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 50;
@@ -269,6 +278,9 @@
       this._init(lineCount, start, gap);
     }
 
+    // 剩余的空位数量
+
+
     _createClass$1(Section, [{
       key: '_init',
       value: function _init() {
@@ -284,6 +296,11 @@
           this.lines[i] = new Line(start + gap * i);
         }
       }
+    }, {
+      key: 'getLine',
+      value: function getLine(lineIndex) {
+        return this.lines[lineIndex];
+      }
 
       /**
        * 获取能放下count数量的line的index数组
@@ -291,32 +308,14 @@
        */
 
     }, {
-      key: '_getPropertyLineIndex',
-      value: function _getPropertyLineIndex(count) {
+      key: 'getPropertyLineIndex',
+      value: function getPropertyLineIndex(count) {
         if (this.maxCount < count) return [];
 
         return this.lines.reduce(function (prev, line, lineIndex) {
           if (line.maxCount >= count) return prev.concat(lineIndex);
           return prev;
         }, []);
-      }
-
-      /**
-       * 锁定随机的长度为count的座位并返回
-       * @param {Number} count
-       */
-
-    }, {
-      key: 'lockRandomSeat',
-      value: function lockRandomSeat(count) {
-        if (this.maxCount < count) return false; // TODO
-        var arr = this._getPropertyLineIndex(count);
-        var lineIndex = random(arr.length);
-
-        return {
-          lineIndex: lineIndex + 1,
-          seats: this.lines[lineIndex].lockRandomSeat(count)
-        };
       }
     }, {
       key: 'lockSeat',
@@ -328,6 +327,13 @@
       key: 'releaseAll',
       value: function releaseAll() {}
     }, {
+      key: 'seatCount',
+      get: function get() {
+        return this.lines.reduce(function (prev, curr) {
+          return prev + curr.seatCount;
+        }, 0);
+      }
+    }, {
       key: 'maxCount',
       get: function get() {
         return Math.max.apply(Math, _toConsumableArray$1(this.lines.map(function (line) {
@@ -338,8 +344,6 @@
 
     return Section;
   }();
-
-  var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
   var _createClass$2 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -361,6 +365,9 @@
       this._init(sectionCount);
     }
 
+    // 剩余的空位数量
+
+
     _createClass$2(Gym, [{
       key: '_init',
       value: function _init(sectionCount) {
@@ -370,6 +377,11 @@
           this.sections[i] = new Section();
         }
       }
+    }, {
+      key: 'getSection',
+      value: function getSection(sectionIndex) {
+        return this.sections[sectionIndex];
+      }
 
       /**
        * 获取能放下count数量的section的index数组
@@ -378,43 +390,14 @@
       // FIXME 函数式抽象
 
     }, {
-      key: '_getPropertySectionIndex',
-      value: function _getPropertySectionIndex(count) {
+      key: 'getPropertySectionIndex',
+      value: function getPropertySectionIndex(count) {
         if (this.maxCount < count) return [];
 
         return this.sections.reduce(function (prev, section, sectionIndex) {
           if (section.maxCount >= count) return prev.concat(sectionIndex);
           return prev;
         }, []);
-      }
-
-      /**
-       * 锁定随机的长度为count的座位并返回
-       * @param {Number} count
-       */
-
-    }, {
-      key: 'lockRandomSeat',
-      value: function lockRandomSeat(count) {
-        if (this.maxCount < count) return false; // TODO
-        var arr = this._getPropertySectionIndex(count);
-        var sectionIndex = random(arr.length);
-
-        return _extends({
-          sectionIndex: sectionIndex + 1
-        }, this.sections[sectionIndex].lockRandomSeat(count));
-      }
-    }, {
-      key: 'gagaga',
-      value: function gagaga(count) {
-        var _lockRandomSeat = this.lockRandomSeat(count),
-            sectionIndex = _lockRandomSeat.sectionIndex,
-            lineIndex = _lockRandomSeat.lineIndex,
-            seats = _lockRandomSeat.seats;
-
-        seats.forEach(function (seat) {
-          console.log('\u7968\u4F4D\u7F6E\u5728\uFF1A \u7B2C' + sectionIndex + '\u6247\u533A \u7B2C' + lineIndex + '\u6392 \u7B2C' + seat + '\u53F7 ');
-        });
       }
 
       // lockSeat (index, seatIndex, count) {
@@ -430,6 +413,13 @@
       // }
 
     }, {
+      key: 'seatCount',
+      get: function get() {
+        return this.sections.reduce(function (prev, curr) {
+          return prev + curr.seatCount;
+        }, 0);
+      }
+    }, {
       key: 'maxCount',
       get: function get() {
         return Math.max.apply(Math, _toConsumableArray$2(this.sections.map(function (section) {
@@ -442,9 +432,128 @@
   }();
 
   /**
+   * get random number from [0, number)
+   * @param {Number} number
+   */
+  function random(number) {
+    return Math.floor(number * Math.random());
+  }
+
+  function error(msg) {
+    return function () {
+      throw new Error(msg);
+    };
+  }
+
+  /**
+   * 0 -> A， 26 -> AA
+   */
+  function numToLetter(number) {
+    if (number > 25) {
+      var count = Math.floor(number / 26);
+      return numToLetter(count - 1) + numToLetter(number - count * 26);
+    }
+
+    return String.fromCharCode(number + 65);
+  }
+
+  var _createClass$3 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  var illegalInput = error('【出票失败】输入票据数量非法');
+  var noEnoughPos = error('【出票失败】无足够的可选位置');
+
+  var Allocation = function () {
+    function Allocation() {
+      _classCallCheck$3(this, Allocation);
+    }
+
+    _createClass$3(Allocation, [{
+      key: 'allocate',
+      value: function allocate(gym, count) {
+        if (count < 1 || count > 5) illegalInput();
+        if (gym.seatCount < count) noEnoughPos();
+      }
+    }, {
+      key: 'printSeats',
+      value: function printSeats(sectionIndex, lineIndex, seatIndex) {
+        console.log('\u3010\u51FA\u7968\u6210\u529F\u3011 \u4F4D\u7F6E\uFF1A ' + numToLetter(sectionIndex) + '\u533A ' + numToLetter(lineIndex) + '\u6392 ' + (seatIndex + 1) + '\u53F7 ');
+      }
+    }]);
+
+    return Allocation;
+  }();
+
+  var _createClass$4 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+  function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+  var HalfRandomAllocation = function (_Allocation) {
+    _inherits(HalfRandomAllocation, _Allocation);
+
+    function HalfRandomAllocation() {
+      _classCallCheck$4(this, HalfRandomAllocation);
+
+      return _possibleConstructorReturn(this, (HalfRandomAllocation.__proto__ || Object.getPrototypeOf(HalfRandomAllocation)).call(this));
+    }
+
+    /**
+     * 半随机在gym里锁定count个位置
+     * 随机扇区 -> 随机行 -> 随机连续count位置
+     * @param {Object} gym
+     * @param {Number} count
+     */
+
+
+    _createClass$4(HalfRandomAllocation, [{
+      key: 'allocate',
+      value: function allocate(gym, count) {
+        var _this2 = this;
+
+        _get(HalfRandomAllocation.prototype.__proto__ || Object.getPrototypeOf(HalfRandomAllocation.prototype), 'allocate', this).call(this, gym, count);
+
+        var propertySectionArr = gym.getPropertySectionIndex(count);
+        var sectionIndex = propertySectionArr[random(propertySectionArr.length)];
+        var section = gym.getSection(sectionIndex);
+
+        var propertyLineArr = section.getPropertyLineIndex(count);
+        var lineIndex = propertyLineArr[random(propertyLineArr.length)];
+        var line = section.getLine(lineIndex);
+
+        var propertySeatArr = line.getPropertySeatIndex(count);
+        var seatIndex = propertySeatArr[random(propertySeatArr.length)];
+        var seats = line.lockSeat(seatIndex, count);
+
+        seats.forEach(function (seatIndex) {
+          // this.printSeats(sectionIndex, lineIndex, seatIndex);
+          _get(HalfRandomAllocation.prototype.__proto__ || Object.getPrototypeOf(HalfRandomAllocation.prototype), 'printSeats', _this2).call(_this2, sectionIndex, lineIndex, seatIndex); // FIXME rollup这个版本的babel对class打包貌似有问题
+        });
+      }
+    }]);
+
+    return HalfRandomAllocation;
+  }(Allocation);
+
+  /**
    * 库代码入口
    */
+  var allocation = new HalfRandomAllocation();
+  var gym = new Gym(4);
 
-  return Gym;
+  // let gym = new Gym(4);
+  // halfRandom(gym, 5);
+
+  exports.default = Gym;
+  exports.allocation = allocation;
+  exports.gym = gym;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
