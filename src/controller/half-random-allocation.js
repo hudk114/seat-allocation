@@ -27,9 +27,10 @@ export default class HalfRandomAllocation extends Allocation {
     const seatIndex = propertySeatArr[random(propertySeatArr.length)[0]];
     const seats = line.lockSeats(seatIndex, count);
 
-    seats.forEach(seatIndex => {
-      // this.printSeats(sectionIndex, lineIndex, seatIndex);
-      super.printSeats(sectionIndex, lineIndex, seatIndex); // FIXME rollup这个版本的babel对class打包貌似有问题
-    });
+    return seats.map(seatIndex => ({
+      sectionIndex,
+      lineIndex,
+      seatIndex
+    }));
   }
 }

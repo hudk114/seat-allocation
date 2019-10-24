@@ -4,14 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>example</title>
+  <title>seat-allocation</title>
+  <style>
+    .msg {
+      display: flex;
+      width: 100%;
+    }
+
+    .msg-wrapper {
+      width: 50%;
+    }
+
+    .msg-content {
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .order_invalid {
+      text-decoration: line-through;
+    }
+  </style>
 </head>
 <body>
-  <header>the example list here</header>
-  <ul>
-    <li>
-      <a href="/row.html">row</a>
-    </li>
-  </ul>
+  <div id="user" style="float: right;"></div>
+  <h1>座位分配系统</h1>
+  <div style="width: 100%;">
+    <span>
+      购买票数
+    </span>
+    <select id="ticketCount">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <span>
+      出票规则
+    </span>
+    <select id="ticketRule">
+      <option value="random">随机</option>
+      <option value="random-order">随机连续</option>
+      <option value="order">顺序选择</option>
+    </select>
+    <button id="lockTicket">出票</button>
+  </div>
+
+  <div class="msg">
+    <div class="msg-wrapper">
+      <h2>订单</h2>
+      <div class="msg-content" id="orders"></div>
+    </div>
+    <div class="msg-wrapper">
+      <h2>已购</h2>
+      <div class="msg-content">
+        <div id="tickets"></div>
+      </div>
+      <div class="msg-content" id="tickets"></div>
+    </div>
+  </div>
+
+  <script src="/js/seat-allocation.js"></script>
+  <script src="/js/index.js"></script>
 </body>
 </html>

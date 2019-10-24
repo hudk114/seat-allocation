@@ -58,6 +58,10 @@ export default class Gym {
     }, []);
   }
 
+  releaseSeats (sectionIndex, lineIndex, seatIndex, count) {
+    return this.getSection(sectionIndex).releaseSeats(lineIndex, seatIndex, count);
+  }
+
   releaseAll () {
     this._init(this.sectionCount, this.lineCount, this.start, this.gap);
   }

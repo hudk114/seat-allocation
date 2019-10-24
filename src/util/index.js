@@ -2,7 +2,7 @@
  * get random number from [0, number)
  * @param {Number} number
  */
-function getRandomNumber (number) {
+export function getRandomNumber (number) {
   return Math.floor(number * Math.random());
 }
 

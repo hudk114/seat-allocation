@@ -8,7 +8,7 @@ const options = {
     file: `dist/${dev.name}`,
     format: 'umd',
     // 暴露给window的name
-    name: 'row'
+    name: 'seat-allocation'
   },
   plugins: [
     babel({

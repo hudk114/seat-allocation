@@ -1,14 +1,14 @@
 module.exports = {
   dev: {
-    name: 'row.js'
+    name: 'seat-allocation.js'
   },
   prod: {
-    name: 'row.min.js'
+    name: 'seat-allocation.min.js'
   },
   test: {
 
   },
   example: {
-    libName: 'row.js'
+    libName: 'seat-allocation.js'
   }
 };

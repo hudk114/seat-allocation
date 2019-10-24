@@ -8,13 +8,9 @@
  * 后续改进： 1. 边界条件界定时根据产品需求给出更友善的错误提示；
  */
 
-import { innerError } from '../util/error';
+import { innerError } from '../../util/error';
 
 export default class Line {
-  // seats = []; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
-  // lock = false;
-  // seatTotalCount = 0;
-
   constructor (seatTotalCount) {
     this._init(seatTotalCount);
   }
@@ -68,7 +64,7 @@ export default class Line {
         seatCount: seatTotalCount,
         index: 0
       }
-    ];
+    ]; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
   }
 
   _addLock (callback) {

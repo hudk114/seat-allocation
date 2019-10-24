@@ -58,15 +58,6 @@ export default class AllRandomAllocation extends Allocation {
 
     let seatIndexs = random(gym.emptySeatCount, count);
 
-    seatIndexs.forEach(index => {
-      let {
-        sectionIndex,
-        lineIndex,
-        seatIndex
-      } = AllRandomAllocation.lockPostionByIndex(index, gym);
-
-      // this.printSeats(sectionIndex, lineIndex, seatIndex);
-      super.printSeats(sectionIndex, lineIndex, seatIndex); // FIXME rollup这个版本的babel对class打包貌似有问题
-    });
+    return seatIndexs.map(index => AllRandomAllocation.lockPostionByIndex(index, gym));
   }
 }

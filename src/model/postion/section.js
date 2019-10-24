@@ -11,12 +11,6 @@
 import Line from './line';
 
 export default class Section {
-  // lines = []; // 排数据结构
-  // lock = false;
-  // lineCount = 0;
-  // start = 50;
-  // gap = 2;
-
   constructor (lineCount = 26, start = 50, gap = 2) {
     this._init(lineCount, start, gap);
   }
@@ -55,6 +49,10 @@ export default class Section {
       if (line.maxConSeatCount >= count) return prev.concat(lineIndex);
       return prev;
     }, []);
+  }
+
+  releaseSeats (lineIndex, seatIndex, count) {
+    return this.getLine(lineIndex).releaseSeats(seatIndex, count);
   }
 
   releaseAll () {
