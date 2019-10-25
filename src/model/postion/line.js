@@ -67,12 +67,6 @@ export default class Line {
     ]; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
   }
 
-  _addLock (callback) {
-    this.lock = true;
-    callback();
-    this.lock = false;
-  }
-
   /**
    * 获取能放下count数量的index数组
    * 对于[{ index: 0, seatCount: 3 }]和count: 2, 应当返回[0, 1]， 因为位置0和1均可坐下两人
@@ -100,28 +94,25 @@ export default class Line {
    */
   // FIXME 边界条件处理
   lockSeats (index, count) {
-    if (this.lock) return false; // TODO
-    this._addLock(_ => {
-      if (this.seatCount < index + count) innerError();
-      if (!this.getPropertySeatIndex(count).includes(index)) innerError();
+    if (this.seatCount < index + count) innerError();
+    if (!this.getPropertySeatIndex(count).includes(index)) innerError();
 
-      let correctPosIndex = Line.getPosition(index, this.seats);
+    let correctPosIndex = Line.getPosition(index, this.seats);
 
-      // this.seats[correctPosIndex]需要拆分
-      let seat = this.seats[correctPosIndex];
-      let newSeats = [
-        {
-          index: seat.index,
-          seatCount: index - seat.index
-        },
-        {
-          index: index + count,
-          seatCount: seat.index + seat.seatCount - (index + count)
-        }
-      ].filter(({ seatCount }) => seatCount > 0);
+    // this.seats[correctPosIndex]需要拆分
+    let seat = this.seats[correctPosIndex];
+    let newSeats = [
+      {
+        index: seat.index,
+        seatCount: index - seat.index
+      },
+      {
+        index: index + count,
+        seatCount: seat.index + seat.seatCount - (index + count)
+      }
+    ].filter(({ seatCount }) => seatCount > 0);
 
-      this.seats.splice(correctPosIndex, 1, ...newSeats);
-    });
+    this.seats.splice(correctPosIndex, 1, ...newSeats);
 
     return Line.seatToArr({
       index,
@@ -136,51 +127,45 @@ export default class Line {
    */
   // FIXME 包裹情况下的处理
   releaseSeats (index, count) {
-    if (this.lock) return; // TODO
-    this._addLock(_ => {
-      if (index < 0 || index > this.seatTotalCount - 1) innerError();
+    if (index < 0 || index > this.seatTotalCount - 1) innerError();
 
-      let correctPosIndex = Line.getPosition(index, this.seats);
+    let correctPosIndex = Line.getPosition(index, this.seats);
 
-      // 插入后前后两项可能需要合并
-      let start = correctPosIndex;
-      let deleteCount = 0;
-      let newSeat = {
-        index: index,
-        seatCount: count
+    // 插入后前后两项可能需要合并
+    let start = correctPosIndex;
+    let deleteCount = 0;
+    let newSeat = {
+      index: index,
+      seatCount: count
+    };
+
+    const last = this.seats[correctPosIndex - 1];
+    if (last && last.index + last.seatCount >= index) {
+      // 前项需合并
+      start = correctPosIndex - 1;
+      deleteCount++;
+      newSeat = {
+        index: last.index,
+        seatCount:
+          Math.max(last.index + last.seatCount, index + count) - last.index // 有可能整个包裹在last中
       };
+    }
 
-      const last = this.seats[correctPosIndex - 1];
-      if (last && last.index + last.seatCount >= index) {
-        // 前项需合并
-        start = correctPosIndex - 1;
-        deleteCount++;
-        newSeat = {
-          index: last.index,
-          seatCount:
-            Math.max(last.index + last.seatCount, index + count) - last.index // 有可能整个包裹在last中
-        };
-      }
+    const next = this.seats[correctPosIndex];
+    if (next && next.index <= index + count) {
+      // 后项需合并
+      deleteCount++;
+      let i = Math.min(newSeat.index, next.index); // 可能整个包裹在next中
+      newSeat = {
+        index: i,
+        seatCount: next.index + next.seatCount - i
+      };
+    }
 
-      const next = this.seats[correctPosIndex];
-      if (next && next.index <= index + count) {
-        // 后项需合并
-        deleteCount++;
-        let i = Math.min(newSeat.index, next.index); // 可能整个包裹在next中
-        newSeat = {
-          index: i,
-          seatCount: next.index + next.seatCount - i
-        };
-      }
-
-      this.seats.splice(start, deleteCount, newSeat);
-    });
+    this.seats.splice(start, deleteCount, newSeat);
   }
 
   releaseAll () {
-    if (this.lock) return; // TODO
-    this._addLock(_ => {
-      this._init(this.seatCount);
-    });
+    this._init(this.seatCount);
   }
 }

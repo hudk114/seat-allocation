@@ -319,21 +319,6 @@
       value: function removeOrder(order) {
         return this.orders.delete(order);
       }
-
-      /**
-       * 释放所有座位，并清空所有
-       */
-
-    }, {
-      key: 'clearAll',
-      value: function clearAll() {
-        var _this = this;
-
-        Array.from(this.orders).forEach(function (order) {
-          order.clear(); // TODO 后续可以处理成，有没释放的订单的情况下，不让删除用户
-          _this.orders.delete(order);
-        });
-      }
     }, {
       key: 'tickets',
       get: function get() {
@@ -430,13 +415,6 @@
           index: 0
         }]; // 剩余的位置，{ index: 起始点, seatCount: 起始点开始有几个空位 }
       }
-    }, {
-      key: '_addLock',
-      value: function _addLock(callback) {
-        this.lock = true;
-        callback();
-        this.lock = false;
-      }
 
       /**
        * 获取能放下count数量的index数组
@@ -471,32 +449,27 @@
     }, {
       key: 'lockSeats',
       value: function lockSeats(index, count) {
-        var _this = this;
+        var _seats;
 
-        if (this.lock) return false; // TODO
-        this._addLock(function (_) {
-          var _seats;
+        if (this.seatCount < index + count) innerError();
+        if (!this.getPropertySeatIndex(count).includes(index)) innerError();
 
-          if (_this.seatCount < index + count) innerError();
-          if (!_this.getPropertySeatIndex(count).includes(index)) innerError();
+        var correctPosIndex = Line.getPosition(index, this.seats);
 
-          var correctPosIndex = Line.getPosition(index, _this.seats);
-
-          // this.seats[correctPosIndex]需要拆分
-          var seat = _this.seats[correctPosIndex];
-          var newSeats = [{
-            index: seat.index,
-            seatCount: index - seat.index
-          }, {
-            index: index + count,
-            seatCount: seat.index + seat.seatCount - (index + count)
-          }].filter(function (_ref) {
-            var seatCount = _ref.seatCount;
-            return seatCount > 0;
-          });
-
-          (_seats = _this.seats).splice.apply(_seats, [correctPosIndex, 1].concat(_toConsumableArray(newSeats)));
+        // this.seats[correctPosIndex]需要拆分
+        var seat = this.seats[correctPosIndex];
+        var newSeats = [{
+          index: seat.index,
+          seatCount: index - seat.index
+        }, {
+          index: index + count,
+          seatCount: seat.index + seat.seatCount - (index + count)
+        }].filter(function (_ref) {
+          var seatCount = _ref.seatCount;
+          return seatCount > 0;
         });
+
+        (_seats = this.seats).splice.apply(_seats, [correctPosIndex, 1].concat(_toConsumableArray(newSeats)));
 
         return Line.seatToArr({
           index: index,
@@ -514,56 +487,46 @@
     }, {
       key: 'releaseSeats',
       value: function releaseSeats(index, count) {
-        var _this2 = this;
+        if (index < 0 || index > this.seatTotalCount - 1) innerError();
 
-        if (this.lock) return; // TODO
-        this._addLock(function (_) {
-          if (index < 0 || index > _this2.seatTotalCount - 1) innerError();
+        var correctPosIndex = Line.getPosition(index, this.seats);
 
-          var correctPosIndex = Line.getPosition(index, _this2.seats);
+        // 插入后前后两项可能需要合并
+        var start = correctPosIndex;
+        var deleteCount = 0;
+        var newSeat = {
+          index: index,
+          seatCount: count
+        };
 
-          // 插入后前后两项可能需要合并
-          var start = correctPosIndex;
-          var deleteCount = 0;
-          var newSeat = {
-            index: index,
-            seatCount: count
+        var last = this.seats[correctPosIndex - 1];
+        if (last && last.index + last.seatCount >= index) {
+          // 前项需合并
+          start = correctPosIndex - 1;
+          deleteCount++;
+          newSeat = {
+            index: last.index,
+            seatCount: Math.max(last.index + last.seatCount, index + count) - last.index // 有可能整个包裹在last中
           };
+        }
 
-          var last = _this2.seats[correctPosIndex - 1];
-          if (last && last.index + last.seatCount >= index) {
-            // 前项需合并
-            start = correctPosIndex - 1;
-            deleteCount++;
-            newSeat = {
-              index: last.index,
-              seatCount: Math.max(last.index + last.seatCount, index + count) - last.index // 有可能整个包裹在last中
-            };
-          }
+        var next = this.seats[correctPosIndex];
+        if (next && next.index <= index + count) {
+          // 后项需合并
+          deleteCount++;
+          var i = Math.min(newSeat.index, next.index); // 可能整个包裹在next中
+          newSeat = {
+            index: i,
+            seatCount: next.index + next.seatCount - i
+          };
+        }
 
-          var next = _this2.seats[correctPosIndex];
-          if (next && next.index <= index + count) {
-            // 后项需合并
-            deleteCount++;
-            var i = Math.min(newSeat.index, next.index); // 可能整个包裹在next中
-            newSeat = {
-              index: i,
-              seatCount: next.index + next.seatCount - i
-            };
-          }
-
-          _this2.seats.splice(start, deleteCount, newSeat);
-        });
+        this.seats.splice(start, deleteCount, newSeat);
       }
     }, {
       key: 'releaseAll',
       value: function releaseAll() {
-        var _this3 = this;
-
-        if (this.lock) return; // TODO
-        this._addLock(function (_) {
-          _this3._init(_this3.seatCount);
-        });
+        this._init(this.seatCount);
       }
     }, {
       key: 'emptySeatCount',
@@ -717,10 +680,6 @@
   function _classCallCheck$8(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
   var Gym = function () {
-    // sections = []; // eslint-disable-line
-    // lock = false;
-    // sectionCount = 0;
-
     function Gym() {
       var sectionCount = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 4;
       var lineCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 26;
@@ -837,12 +796,13 @@
    */
 
   var Order = function () {
-    function Order(id) {
-      var tickets = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Set(Ticket);
+    function Order(id, user) {
+      var tickets = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Set(Ticket);
 
       _classCallCheck$a(this, Order);
 
       this.id = id;
+      this.user = user;
       this.tickets = tickets;
       this.time = new Date();
       this.valid = true;
@@ -886,9 +846,9 @@
 
     _createClass$b(OrderManager, [{
       key: 'createOrder',
-      value: function createOrder(allocate, count) {
+      value: function createOrder(allocate, count, user) {
         var tickets = allocate(this.gym, count);
-        var order = new Order(++this.maxOrderId, tickets);
+        var order = new Order(++this.maxOrderId, user, tickets);
         this.orderList.add(order);
 
         return order;
@@ -974,14 +934,16 @@
   function addLock(callback) {
     lock = true;
 
-    callback(); // TODO 因为没有db操作，所以此处简单处理均采用同步编写，之后可采用promise或者async改写
+    try {
+      callback(); // TODO 因为没有db操作，所以此处简单处理均采用同步编写，之后可采用promise或者async改写
+    } finally {
+      // 清空cacheQueue
+      if (cacheQueue.length) {
+        addLock(cacheQueue.shift());
+      }
 
-    // 清空cacheQueue
-    if (cacheQueue.length) {
-      addLock(cacheQueue.shift());
+      lock = false;
     }
-
-    lock = false;
   }
 
   /**
@@ -994,14 +956,15 @@
     order: new OrderAllocation()
   };
 
-  var gym = new Gym(4, 26, 50, 2);
+  // const gym = new Gym(4, 26, 50, 2);
+  var gym = new Gym(1, 2, 5, 2);
 
   var userManager = new UserManager(gym);
   var orderManager = new OrderManager(gym);
 
   var user = userManager.createUser(); // TODO 移到服务端
 
-  // TODO 这里的方法应当移到服务端作为后端请求
+  // TODO 这里export的方法应当移到服务端作为ajax请求
   function createUser() {
     return userManager.createUser();
   }
@@ -1017,7 +980,7 @@
    */
   function createOrder(type, count) {
     return exec(function (_) {
-      var order = orderManager.createOrder(RuleType[type].allocate, count);
+      var order = orderManager.createOrder(RuleType[type].allocate, count, user);
       user.addOrder(order);
       return order;
     });
@@ -1049,13 +1012,10 @@
     return Promise.resolve(user);
   }
 
-  function exit() {
+  function userExit() {
     // TODO 
   }
 
-  exports.gym = gym;
-  exports.userManager = userManager;
-  exports.orderManager = orderManager;
   exports.createUser = createUser;
   exports.getUser = getUser;
   exports.createOrder = createOrder;
@@ -1064,7 +1024,7 @@
   exports.getAllOrders = getAllOrders;
   exports.getAllTickets = getAllTickets;
   exports.getUserInfo = getUserInfo;
-  exports.exit = exit;
+  exports.userExit = userExit;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -1,5 +1,5 @@
-import Allocation from './allocation';
-import { random } from '../util/index';
+import Allocation from './index.js';
+import { random } from '../../util/index.js';
 
 export default class AllRandomAllocation extends Allocation {
   // TODO 写得太丑陋了...

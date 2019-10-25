@@ -23,12 +23,14 @@ export function exec (callback) {
 function addLock (callback) {
   lock = true;
 
-  callback(); // TODO 因为没有db操作，所以此处简单处理均采用同步编写，之后可采用promise或者async改写
+  try {
+    callback(); // TODO 因为没有db操作，所以此处简单处理均采用同步编写，之后可采用promise或者async改写
+  } finally {
+    // 清空cacheQueue
+    if (cacheQueue.length) {
+      addLock(cacheQueue.shift());
+    }
 
-  // 清空cacheQueue
-  if (cacheQueue.length) {
-    addLock(cacheQueue.shift());
+    lock = false;
   }
-
-  lock = false;
 }

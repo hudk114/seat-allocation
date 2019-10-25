@@ -1,5 +1,5 @@
-import Allocation from './allocation';
-import { noEnoughPosError } from '../util/error';
+import Allocation from './index.js';
+import { noEnoughPosError } from '../../util/error';
 
 export default class OrderAllocation extends Allocation {
   /**

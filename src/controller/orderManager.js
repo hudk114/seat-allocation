@@ -7,9 +7,9 @@ export default class OrderManager {
     this.gym = gym;
   }
 
-  createOrder (allocate, count) {
+  createOrder (allocate, count, user) {
     let tickets = allocate(this.gym, count);
-    let order = new Order(++this.maxOrderId, tickets);
+    let order = new Order(++this.maxOrderId, user, tickets);
     this.orderList.add(order);
 
     return order;

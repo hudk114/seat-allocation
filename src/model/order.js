@@ -6,8 +6,9 @@ import Ticket from './ticket';
  * 订单可以被取消，取消后状态不可变
  */
 export default class Order {
-  constructor (id, tickets = new Set(Ticket)) {
+  constructor (id, user, tickets = new Set(Ticket)) {
     this.id = id;
+    this.user = user;
     this.tickets = tickets;
     this.time = new Date();
     this.valid = true;

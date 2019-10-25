@@ -1,4 +1,4 @@
-import { illegalInputError, noEnoughPosError } from '../util/error';
+import { illegalInputError, noEnoughPosError } from '../../util/error';
 
 export default class Allocation {
   allocate (gym, count) {

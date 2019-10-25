@@ -55,12 +55,16 @@ function refreshAll () {
   refreshTickets();
 }
 
+function errorHandler (error) {
+  alert(error.message || error);
+}
+
 // 锁票
 addEvent('lockTicket', 'click', function (e) {
   var ticketCount = Number(getDOM('ticketCount').value);
   var rule = getDOM('ticketRule').value;
 
-  seatAllocation.createOrder(rule, ticketCount).then(refreshAll);
+  seatAllocation.createOrder(rule, ticketCount).then(refreshAll).catch(errorHandler);
 });
 
 // 订单取消与删除

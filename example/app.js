@@ -19,5 +19,5 @@ app.get('/', (req, res) => {
 
 app.listen(7000, _ => {
   console.log('listen to localhost:7000');
-  // opn('http://localhost:7000');
+  opn('http://localhost:7000');
 });

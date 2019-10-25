@@ -12,10 +12,6 @@
 import Section from './section';
 
 export default class Gym {
-  // sections = []; // eslint-disable-line
-  // lock = false;
-  // sectionCount = 0;
-
   constructor (sectionCount = 4, lineCount = 26, start = 50, gap = 2) {
     this._init(sectionCount, lineCount, start, gap);
   }

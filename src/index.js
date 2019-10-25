@@ -2,9 +2,9 @@
  * 库代码入口
  */
 
-import AllRandomAllocation from './controller/all-random-allocation';
-import HalfRandomAllocation from './controller/half-random-allocation';
-import OrderAllocation from './controller/order-allocation';
+import AllRandomAllocation from './controller/allocation/all-random-allocation';
+import HalfRandomAllocation from './controller/allocation/half-random-allocation';
+import OrderAllocation from './controller/allocation/order-allocation';
 import UserManager from './controller/userManager';
 import Gym from './model/postion/gym';
 import OrderManager from './controller/orderManager';
@@ -17,14 +17,14 @@ const RuleType = {
   order: new OrderAllocation()
 };
 
-export const gym = new Gym(4, 26, 50, 2);
+const gym = new Gym(4, 26, 50, 2);
 
-export const userManager = new UserManager(gym);
-export const orderManager = new OrderManager(gym);
+const userManager = new UserManager(gym);
+const orderManager = new OrderManager(gym);
 
 const user = userManager.createUser(); // TODO 移到服务端
 
-// TODO 这里的方法应当移到服务端作为后端请求
+// TODO 这里export的方法应当移到服务端作为ajax请求
 export function createUser () {
   return userManager.createUser();
 }
@@ -40,7 +40,7 @@ export function getUser (userId) {
  */
 export function createOrder (type, count) {
   return exec(_ => {
-    let order = orderManager.createOrder(RuleType[type].allocate, count);
+    let order = orderManager.createOrder(RuleType[type].allocate, count, user);
     user.addOrder(order);
     return order;
   });
@@ -72,6 +72,6 @@ export function getUserInfo () {
   return Promise.resolve(user);
 }
 
-export function exit () {
-  // TODO 
+export function userExit () {
+  // TODO
 }

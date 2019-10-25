@@ -28,14 +28,4 @@ export default class User {
   removeOrder (order) {
     return this.orders.delete(order);
   }
-
-  /**
-   * 释放所有座位，并清空所有
-   */
-  clearAll () {
-    Array.from(this.orders).forEach(order => {
-      order.clear(); // TODO 后续可以处理成，有没释放的订单的情况下，不让删除用户
-      this.orders.delete(order);
-    });
-  }
 }
